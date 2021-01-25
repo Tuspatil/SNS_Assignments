@@ -16,13 +16,14 @@ def signUp(uname,psswd,s):
 		s.close()
 	else:	
 		authInfo[uname]=psswd
-		fp = open('users.txt','r+')
-		fp.write(uname+"#"+psswd)
+		fp = open('users.txt','a+')
+		fp.write(uname+"#"+psswd+"\n")
 		fp.close()
 		msg = "Sign up successfull, please sign in to continue"
 		s.send(msg.encode('ascii'))
 		s.close()
 def signIn(uname,psswd,port,s):
+	print(authInfo)
 	if(authInfo[uname] == psswd):
 		msg = "valid"
 		s.send(msg.encode('ascii'))
