@@ -45,7 +45,9 @@ def Main():
 		serverSocket.close()
 
 	print("Sign in to continue")
+	print("ENter username\n")
 	uname = input()
+	print("Enter password\n")
 	passwd = input()
 	data = "in#"+uname+"#"+passwd+"#"+str(port)
 	serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -74,6 +76,7 @@ def Main():
 		#1. signup/sign in [Done]
 		#2. connecting to server to validate the user.[Done]
 		#3. show online users -> send CLIENTNAME msg -> get port of client -> send the msg
+		print("User: "+uname+"\n")
 		print("1.Show online users\n2. Send text")
 		choice = int(input())
 		if(choice == 1):
@@ -87,14 +90,17 @@ def Main():
 			print(clientList)
 			clientSocket.close()
 		elif(choice == 2):
-			clientSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-			clientSocket.connect((host,8080))
+			serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			serverSocket.connect((host,8080))
+			print("Whom do u wanna send from available users\n")
 			receiver = input() #Taking input to whom we wanna connect
 			msg = "getPort#"+receiver 
-			clientSocket.send(msg.encode('ascii'))
-			temp = clientSocket.recv(1024)
+			serverSocket.send(msg.encode('ascii'))
+			temp = serverSocket.recv(1024)
 			senderPort = int(temp.decode('ascii'))
+			serverSocket.close()
 			print(senderPort)
+			clientSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 			clientSocket.connect((host,senderPort))
 			print("Type your message:")
 			msg = input()
