@@ -7,12 +7,19 @@ import threading
 
 print_lock = threading.Lock() 
  
-def threaded(s): # for accepting msgs
-
+def threaded(s,uname): # for accepting msgs
+	print(uname)
 	while True: 
 		c, addr = s.accept()
 		data = c.recv(1024) 
-		print(str(data.decode('ascii')))
+		msg = data.decode('ascii')
+		tokens = msg.split('#')
+		print(tokens)
+		if(tokens[0] == "i"):
+			print(tokens[1]+": "+ tokens[2])
+		elif(tokens[0] == "grp"):
+			print(tokens[1])
+			print(tokens[2]+": "+tokens[3])			
 		c.close() 
 
 
@@ -66,7 +73,7 @@ def Main():
  
 	s.listen(5) #listening on the port
 
-	start_new_thread(threaded, (s,))
+	start_new_thread(threaded, (s,uname))
 
 	print("peer is listening as well as sending")
 		
@@ -103,7 +110,8 @@ def Main():
 			clientSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 			clientSocket.connect((host,senderPort))
 			print("Type your message:")
-			msg = input()
+			data = input()
+			msg = "i#"+uname+"#"+data
 			clientSocket.send(msg.encode('ascii'))
 			clientSocket.close()
 		elif(choice == 4):
@@ -135,7 +143,7 @@ def Main():
 			print(groupDetails)
 		elif(choice == 7):
 			print("Enter group message")
-			grpmsg = input()
+			commonmsg = input()
 			msg = "sg#"+str(port)
 			serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 			serverSocket.connect((host,8080))
@@ -147,6 +155,7 @@ def Main():
 			print(groupDetails)
 			for groupName in groupDetails: #now we have all groups in which current user belong. Now we have to get all peer belonging to that group
 				msg = "getUsers#"+groupName
+				grpmsg = "grp#"+groupName+"#"+uname+"#"+commonmsg
 				serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 				serverSocket.connect((host,8080))
 				serverSocket.send(msg.encode('ascii'))
@@ -155,11 +164,14 @@ def Main():
 				users = userList.split('#') # we have all ports where message is to be sent
 				print(users)
 				for user in users:
-					port = int(user)
+					port1 = int(user)
+					if(port1 == port):
+						continue
 					clientSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-					clientSocket.connect((host,port))
+					clientSocket.connect((host,port1))
 					clientSocket.send(grpmsg.encode('ascii'))
 					clientSocket.close()
+				grpmsg=""	
 
 
 
