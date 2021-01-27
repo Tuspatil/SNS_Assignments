@@ -13,27 +13,40 @@ def threaded(s,uname,dirpath): # for accepting msgs
 	while True: 
 		c, addr = s.accept()
 		data = c.recv(1024)
-		data1 = data
-		temp = data1.decode('ascii')
-		tokens = temp.split('#')
 		print(len(data),data)
 		temp = data[:4]
 		choice = temp.decode('ascii')
 		#tokens = msg.split('#')
 		print(choice)
 		if(choice == "indi"):
+			tokens = data.decode('ascii')
+			tokens = tokens.split('#')
 			print(tokens[1]+": "+ tokens[2])
 		elif(choice == "grup"):
+			tokens = data.decode('ascii')
+			tokens = tokens.split('#')
 			print(tokens[1])
 			print(tokens[2]+": "+tokens[3])
 		elif(choice == "file"):
-			print(tokens[1])
-			f = open(dirpath+"/"+tokens[1],'wb') #open in binary
-			while (True):       
-				l=c.recv(1024)
-				while (l):
-					f.write(l)
-					l = s.recv(1024)
+			filename = data[4:68]
+			filename = filename.decode("ascii")
+			filename = filename.split("#")
+			filename = filename[0]
+			remdata = data[68:]
+			actualfile = bytearray()
+			counter = 1
+			while (remdata):   
+				print("chunk #",counter," len(remdata)")
+				counter = counter + 1
+				actualfile = actualfile + remdata    
+				remdata = c.recv(1024)
+				if not remdata:
+					break
+			print(filename)
+			print(len(actualfile))
+			dirpath = os.path.join(".",dirpath,filename)
+			f = open(dirpath,"wb")
+			f.write(actualfile)
 			f.close()				
 		c.close() 
 
@@ -220,17 +233,28 @@ def Main():
 
 			fileSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 			fileSocket.connect((host,senderPort))
-			msg = "file#"+fileName
-			print(msg)
-			fileSocket.send(msg.encode('ascii'))
+			# print(msg)
+			# fileSocket.send(msg.encode('ascii'))
 
 			fname = "./"+uname+"/"+fileName
+			fileName = fileName.ljust(64,"#")
+			msg = "file"+fileName
+			msg = bytearray(msg,'ascii')
+			print("for code n name")
+			print(type(msg))
+			print(len(msg))
 			print("File path",fname)
 			f = open (fname, "rb")
-			l = f.read(1024)
+			temp1 = f.read(956)
+			print(type(temp1))
+			temp1 = bytearray(temp1)
+			print(type(temp1))
+			print(len(temp1))
+			msg += temp1
+			l = msg
 			while (l):
 			    fileSocket.send(l)
-			    l = f.read(1024)
+			    l = bytearray(f.read(1024))
 			fileSocket.close()
 
 
