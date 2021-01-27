@@ -1,25 +1,40 @@
 # import socket programming library 
 import socket 
 import sys
+import os
 
 from _thread import *
 import threading 
 
 print_lock = threading.Lock() 
  
-def threaded(s,uname): # for accepting msgs
+def threaded(s,uname,dirpath): # for accepting msgs
 	print(uname)
 	while True: 
 		c, addr = s.accept()
-		data = c.recv(1024) 
-		msg = data.decode('ascii')
-		tokens = msg.split('#')
-		print(tokens)
-		if(tokens[0] == "i"):
+		data = c.recv(1024)
+		data1 = data
+		temp = data1.decode('ascii')
+		tokens = temp.split('#')
+		print(len(data),data)
+		temp = data[:4]
+		choice = temp.decode('ascii')
+		#tokens = msg.split('#')
+		print(choice)
+		if(choice == "indi"):
 			print(tokens[1]+": "+ tokens[2])
-		elif(tokens[0] == "grp"):
+		elif(choice == "grup"):
 			print(tokens[1])
-			print(tokens[2]+": "+tokens[3])			
+			print(tokens[2]+": "+tokens[3])
+		elif(choice == "file"):
+			print(tokens[1])
+			f = open(dirpath+"/"+tokens[1],'wb') #open in binary
+			while (True):       
+				l=c.recv(1024)
+				while (l):
+					f.write(l)
+					l = s.recv(1024)
+			f.close()				
 		c.close() 
 
 
@@ -66,14 +81,17 @@ def Main():
 	if(ack == "invalid"):
 		print("Invalid credentials. Exiting.....")
 		exit()
-	
+	dirpath = "./"+uname
+	print("dirpath: ",dirpath)	
+	os.system("mkdir "+dirpath)
+	os.system("chmod 777 "+dirpath)
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #create socket
 
 	s.bind((host, port)) # command line arguments
  
 	s.listen(5) #listening on the port
 
-	start_new_thread(threaded, (s,uname))
+	start_new_thread(threaded, (s,uname,dirpath))
 
 	print("peer is listening as well as sending")
 		
@@ -84,7 +102,7 @@ def Main():
 		#2. connecting to server to validate the user.[Done]
 		#3. show online users -> send CLIENTNAME msg -> get port of client -> send the msg
 		print("User: "+uname)
-		print("1.Show online users\n2.Send text\n4.Create Group\n5.Join Group\n6.List Groups\n7.Send to Group")
+		print("1.Show online users\n2.Send text\n3.send file\n4.Create Group\n5.Join Group\n6.List Groups\n7.Send to Group")
 		choice = int(input())
 		if(choice == 1):
 			clientSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -111,7 +129,7 @@ def Main():
 			clientSocket.connect((host,senderPort))
 			print("Type your message:")
 			data = input()
-			msg = "i#"+uname+"#"+data
+			msg = "indi#"+uname+"#"+data
 			clientSocket.send(msg.encode('ascii'))
 			clientSocket.close()
 		elif(choice == 4):
@@ -155,7 +173,7 @@ def Main():
 			print(groupDetails)
 			for groupName in groupDetails: #now we have all groups in which current user belong. Now we have to get all peer belonging to that group
 				msg = "getUsers#"+groupName
-				grpmsg = "grp#"+groupName+"#"+uname+"#"+commonmsg
+				grpmsg = "grup#"+groupName+"#"+uname+"#"+commonmsg
 				serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 				serverSocket.connect((host,8080))
 				serverSocket.send(msg.encode('ascii'))
@@ -172,7 +190,48 @@ def Main():
 					clientSocket.send(grpmsg.encode('ascii'))
 					clientSocket.close()
 				grpmsg=""	
+		elif(choice == 3):
+			os.system("cd ./"+uname+" && ls") # show all files
 
+			print("Which file do you want to send")
+			fileName = input()
+
+			print("whom do yo want to send?")
+			serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			msg = "ping#uname"
+			serverSocket.connect((host,8080))
+			serverSocket.send(msg.encode('ascii'))
+			response = serverSocket.recv(1024)
+			clients = response.decode('ascii')
+			clientList = clients.split('#')
+			print(clientList) #list of clients displayed
+			serverSocket.close()
+
+			receiver = input() #enter any one name from the list
+			serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			serverSocket.connect((host,8080))
+			msg = "getPort#"+receiver
+			print(msg) 
+			serverSocket.send(msg.encode('ascii'))
+			temp = serverSocket.recv(1024)
+			senderPort = int(temp.decode('ascii')) #Got the port
+			print("Response port",senderPort)
+			serverSocket.close()
+
+			fileSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			fileSocket.connect((host,senderPort))
+			msg = "file#"+fileName
+			print(msg)
+			fileSocket.send(msg.encode('ascii'))
+
+			fname = "./"+uname+"/"+fileName
+			print("File path",fname)
+			f = open (fname, "rb")
+			l = f.read(1024)
+			while (l):
+			    fileSocket.send(l)
+			    l = f.read(1024)
+			fileSocket.close()
 
 
 if __name__ == '__main__': 
