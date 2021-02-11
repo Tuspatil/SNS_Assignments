@@ -24,7 +24,8 @@ def getp(data):
         data += " "
     elif len(data) % 3 == 2:
         data += "  " 
-    p = np.array(list(map(ENCODING_RULE, data))).reshape((3, len(data)//3), 'F')
+    p = np.array(list(map(ENCODING_RULE, data)))
+    p = np.reshape(p, (3, len(data)//3), 'F')
     return p
 
 def getRemainder(data):
