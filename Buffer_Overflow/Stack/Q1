@@ -1,9 +1,0 @@
-Q1 : What is Stack guard?
-Ans: The GCC compiler implements a security mechanism called “Stack Guard” to prevent buffer
-overflows. In the presence of this protection, buffer overflow will not work. You can disable this
-protection when you are compiling the program using the switch -fno-stack-protector.
-
-Q2 : What is ASLR protection?
-Ans : Ubuntu and several other Linux-based systems uses address space ran- domization to randomize the
-starting address of heap and stack. This makes guessing the exact addresses difficult; guessing
-addresses is one of the critical steps of buffer-overflow attacks.
