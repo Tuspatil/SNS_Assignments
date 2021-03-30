@@ -1,6 +1,7 @@
 Varun and Tushar:
 1. Varun and Tushar were responsible to cover the stack buffer attack. Every question was discussed among both of us as it was new and each question needed thorough understanding.
-2. The steps for each attack related to stack has been explained in the report along with screenshots.
+2. The steps for each attack related to stack has been explained in the report(Stack report) along with screenshots.
 3. The Bad files are also submitted.
+4. Submitted files : 1. Stack_report.pdf 2. Bad files
 
 Upinder and Shraddha:
